@@ -1,0 +1,243 @@
+/* style.css — общие стили для всех станций */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+:root {
+  --green: #4ade80;
+  --bg: #0d1a0f;
+  --surface: #132016;
+  --border: #1e3422;
+  --text: #e8f5eb;
+  --muted: #7fa888;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: #000;
+  color: var(--text);
+  overflow: hidden;
+  height: 100dvh;
+}
+
+/* ── HUD ─────────────────────────────────────────────────────── */
+#hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+  pointer-events: none;
+}
+
+#progress-badge, #point-badge, #hudName {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+  color: rgba(255,255,255,0.9);
+}
+
+#progress-badge { color: var(--green); }
+#point-badge { font-size: 12px; letter-spacing: 0.3px; }
+
+/* ── Scan hint ───────────────────────────────────────────────── */
+#hint {
+  position: fixed;
+  bottom: 36px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 14px;
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+  transition: opacity 0.3s;
+}
+
+#hint.hidden { opacity: 0; pointer-events: none; }
+
+/* ── Placeholder (shown before scan) ────────────────────────── */
+#placeholder {
+  position: fixed;
+  bottom: 100px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  text-align: center;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+#placeholder.hidden { opacity: 0; }
+
+.ph-icon { font-size: 40px; margin-bottom: 6px; }
+.ph-name { font-size: 16px; font-weight: 800; color: var(--text); }
+.ph-latin { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 2px; }
+
+/* ── UI panels container ─────────────────────────────────────── */
+#ui {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  padding: 0 0 env(safe-area-inset-bottom);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+#ui.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Panel ───────────────────────────────────────────────────── */
+.panel {
+  display: none;
+  background: rgba(10, 24, 12, 0.93);
+  border-top: 1px solid var(--border);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 28px;
+  backdrop-filter: blur(16px);
+  max-height: 70dvh;
+  overflow-y: auto;
+}
+
+.panel.active { display: block; }
+
+.panel-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green);
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.panel h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.panel p {
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(232,245,235,0.85);
+  margin-bottom: 16px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  display: block;
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--green);
+  color: #0a1a0c;
+  text-align: center;
+}
+
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-answer {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text);
+}
+
+.btn-answer:hover:not(:disabled) { background: rgba(255,255,255,0.12); }
+
+.btn-answer:disabled { cursor: default; opacity: 0.7; }
+
+.btn-answer.correct {
+  background: rgba(74,222,128,0.2);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.btn-answer.wrong {
+  background: rgba(239,68,68,0.15);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+/* ── Result message ──────────────────────────────────────────── */
+.result {
+  font-size: 13px;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
+.correct-msg {
+  background: rgba(74,222,128,0.12);
+  border: 1px solid rgba(74,222,128,0.3);
+  color: #86efac;
+}
+
+.wrong-msg {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #fca5a5;
+}
+
+/* ── Stamp panel ─────────────────────────────────────────────── */
+.stamp-wrap { text-align: center; padding: 10px 0; }
+
+.stamp-circle {
+  font-size: 52px;
+  margin-bottom: 10px;
+  display: block;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Dots (progress in stamp panel) ─────────────────────────── */
+.dots {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.dot.done { background: var(--green); }
+.dot.current { background: rgba(74,222,128,0.45); }
+
+.mt16 { margin-top: 16px; }

@@ -1,10 +1,6 @@
 // quest.js — общая логика для всех 7 станций
 
 function initPoint(cfg) {
-    // cfg: { pointId, targetIndex, correctAns, nextUrl,
-    //        plantName, plantLatin, plantEmoji, hasVideo,
-    //        correctText, wrongText }
-  
     const userId    = localStorage.getItem('quest_userId');
     const groupCode = localStorage.getItem('quest_groupCode');
     const userName  = localStorage.getItem('quest_name');
@@ -17,9 +13,7 @@ function initPoint(cfg) {
                     background:#0d1a0f;color:#e8f5eb;font-family:sans-serif;padding:32px;text-align:center;">
           <p style="opacity:.7">Сначала войдите в группу</p>
           <a href="/" style="color:#4ade80;border:1px solid #4ade8055;
-                             padding:12px 28px;border-radius:10px;text-decoration:none;">
-            ← Войти
-          </a>
+                             padding:12px 28px;border-radius:10px;text-decoration:none;">← Войти</a>
         </div>`;
       return;
     }
@@ -27,11 +21,9 @@ function initPoint(cfg) {
     // ── HUD ─────────────────────────────────────────────────────────────
     const hudName = document.getElementById('hudName');
     if (hudName) hudName.textContent = userName || 'Участник';
-  
-    // Progress dots
     updateDots(cfg.pointId);
   
-    // Placeholder plant name
+    // Placeholder
     const phName  = document.querySelector('.ph-name');
     const phLatin = document.querySelector('.ph-latin');
     const phIcon  = document.querySelector('.ph-icon');
@@ -40,33 +32,38 @@ function initPoint(cfg) {
     if (phIcon)  phIcon.textContent  = cfg.plantEmoji;
   
     // ── AR logic ─────────────────────────────────────────────────────────
-    const arTarget = document.querySelector('#ar-target');
-    const video    = document.querySelector('#plant-video');
-    const ui       = document.getElementById('ui');
-    const hint     = document.getElementById('hint');
+    const arTarget    = document.querySelector('#ar-target');
+    const video       = document.querySelector('#plant-video');
+    const ui          = document.getElementById('ui');
+    const hint        = document.getElementById('hint');
     const placeholder = document.getElementById('placeholder');
   
     let progressSaved = false;
-    let targetVisible = false;
+    let stationDone   = false; // станция уже пройдена в этой сессии
+  
+    // Если станция уже пройдена ранее — сразу показать штамп при сканировании
+    const completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
+    if (completed.includes(cfg.pointId)) stationDone = true;
   
     if (arTarget) {
       arTarget.addEventListener('targetFound', () => {
-        targetVisible = true;
         if (hint) hint.classList.add('hidden');
+        if (placeholder) placeholder.classList.add('hidden');
   
         if (video && cfg.hasVideo) {
           video.currentTime = 0;
           video.play().catch(() => { video.muted = true; video.play(); });
         }
   
-        // Show UI panels
         if (ui) ui.classList.add('visible');
-        if (placeholder) placeholder.classList.add('hidden');
   
-        // Show fact panel first
-        showPanel('fact-panel');
+        // Если уже прошли — сразу штамп, иначе факт
+        if (stationDone) {
+          showPanel('stamp-panel');
+        } else {
+          showPanel('fact-panel');
+        }
   
-        // Save progress once
         if (!progressSaved) {
           saveProgress(cfg.pointId, groupCode, userId);
           progressSaved = true;
@@ -74,13 +71,12 @@ function initPoint(cfg) {
       });
   
       arTarget.addEventListener('targetLost', () => {
-        targetVisible = false;
         if (video) video.pause();
-        if (hint) hint.classList.remove('hidden');
+        if (!stationDone && hint) hint.classList.remove('hidden');
       });
     }
   
-    // ── Quiz logic ────────────────────────────────────────────────────────
+    // ── Quiz ──────────────────────────────────────────────────────────────
     window.showQuiz = function() {
       showPanel('quiz-panel');
     };
@@ -90,21 +86,41 @@ function initPoint(cfg) {
       const buttons   = document.querySelectorAll('.btn-answer');
   
       buttons.forEach(b => b.disabled = true);
+      stationDone = true;
   
       if (answerNum === cfg.correctAns) {
         btn.classList.add('correct');
-        if (resultMsg) resultMsg.innerHTML = `<p class="result correct-msg">${cfg.correctText}</p>`;
+        if (resultMsg) resultMsg.innerHTML =
+          `<p class="result correct-msg">${cfg.correctText}</p>`;
         setTimeout(() => showPanel('stamp-panel'), 1400);
       } else {
         btn.classList.add('wrong');
-        // Highlight correct
         buttons[cfg.correctAns - 1]?.classList.add('correct');
-        if (resultMsg) resultMsg.innerHTML = `<p class="result wrong-msg">${cfg.wrongText}</p>`;
+        if (resultMsg) resultMsg.innerHTML =
+          `<p class="result wrong-msg">${cfg.wrongText}</p>`;
+        // После неправильного ответа — тоже показываем штамп через 2.5 сек
+        setTimeout(() => showPanel('stamp-panel'), 2500);
       }
     };
   
+    // ── Переход после штампа ─────────────────────────────────────────────
     window.goNext = function() {
-      window.location.href = cfg.nextUrl;
+      const done = JSON.parse(localStorage.getItem('quest_completed') || '[]');
+  
+      // Если все 7 пройдены — финал
+      if (done.length >= 7) {
+        window.location.href = '/final.html';
+        return;
+      }
+  
+      // Иначе — скрыть UI, дать искать следующий маркер
+      if (ui) ui.classList.remove('visible');
+      showPanel('');
+      if (hint) {
+        hint.textContent = '📷 Найди следующую карточку с котиком 🐱';
+        hint.classList.remove('hidden');
+      }
+      if (placeholder) placeholder.classList.remove('hidden');
     };
   
     window.showPanel = showPanel;
@@ -114,31 +130,32 @@ function initPoint(cfg) {
   
   function showPanel(id) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    const target = document.getElementById(id);
-    if (target) target.classList.add('active');
+    if (id) {
+      const target = document.getElementById(id);
+      if (target) target.classList.add('active');
+    }
   }
   
   function updateDots(currentId) {
-    const dotsEl = document.getElementById('dots');
-    const doneEl = document.getElementById('done-count');
-    const TOTAL  = 7;
-  
-    // Get completed stations from localStorage
-    let completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
+    const dotsEl   = document.getElementById('dots');
+    const doneEl   = document.getElementById('done-count');
+    const TOTAL    = 7;
+    const completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
   
     if (doneEl) doneEl.textContent = completed.length;
   
     if (dotsEl) {
       dotsEl.innerHTML = Array.from({ length: TOTAL }, (_, i) => {
         const n   = i + 1;
-        const cls = completed.includes(n) ? 'dot done' : n === currentId ? 'dot current' : 'dot';
+        const cls = completed.includes(n) ? 'dot done'
+                  : n === currentId       ? 'dot current'
+                  : 'dot';
         return `<div class="${cls}"></div>`;
       }).join('');
     }
   }
   
   async function saveProgress(pointId, groupCode, userId) {
-    // Mark locally
     let completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
     if (!completed.includes(pointId)) {
       completed.push(pointId);
@@ -148,7 +165,6 @@ function initPoint(cfg) {
       if (doneEl) doneEl.textContent = completed.length;
     }
   
-    // Send to server
     try {
       await fetch('/api/progress', {
         method: 'POST',

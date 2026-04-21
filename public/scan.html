@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<script>
+(async function() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch(e) { console.warn("Camera pre-request failed:", e); }
+})();
+</script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Сканер · AR Квест</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+
+<div id="hud">
+  <div id="progress-badge">⭐ <span id="done-count">0</span> / 7</div>
+  <div id="point-badge">Найди карточку с котиком</div>
+  <div id="hudName"></div>
+</div>
+
+<div id="hint">📷 Наведи камеру на любую карточку с котиком</div>
+
+<!-- AR-сцена слушает ВСЕ 7 маркеров -->
+<a-scene
+  mindar-image="imageTargetSrc: /targets/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  renderer="colorManagement: true;"
+>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <a-entity mindar-image-target="targetIndex: 0" id="target-0"></a-entity>
+  <a-entity mindar-image-target="targetIndex: 1" id="target-1"></a-entity>
+  <a-entity mindar-image-target="targetIndex: 2" id="target-2"></a-entity>
+  <a-entity mindar-image-target="targetIndex: 3" id="target-3"></a-entity>
+  <a-entity mindar-image-target="targetIndex: 4" id="target-4"></a-entity>
+  <a-entity mindar-image-target="targetIndex: 5" id="target-5"></a-entity>
+  <a-entity mindar-image-target="targetIndex: 6" id="target-6"></a-entity>
+</a-scene>
+
+<script>
+  // Маппинг: targetIndex → страница станции
+  const STATION_MAP = {
+    0: '/station1.html',
+    1: '/station2.html',
+    2: '/station3.html',
+    3: '/station4.html',
+    4: '/station5.html',
+    5: '/station6.html',
+    6: '/station7.html',
+  };
+
+  // HUD
+  const userName = localStorage.getItem('quest_name');
+  const hudName  = document.getElementById('hudName');
+  if (hudName) hudName.textContent = userName || 'Участник';
+
+  const completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
+  const doneEl = document.getElementById('done-count');
+  if (doneEl) doneEl.textContent = completed.length;
+
+  // Подписываемся на все маркеры
+  for (let i = 0; i <= 6; i++) {
+    const el = document.getElementById(`target-${i}`);
+    if (el) {
+      el.addEventListener('targetFound', () => {
+        // Переходим на нужную станцию
+        window.location.href = STATION_MAP[i];
+      });
+    }
+  }
+</script>
+</body>
+</html>

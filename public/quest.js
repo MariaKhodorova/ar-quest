@@ -23,7 +23,6 @@ function initPoint(cfg) {
     if (hudName) hudName.textContent = userName || 'Участник';
     updateDots(cfg.pointId);
   
-    // Placeholder
     const phName  = document.querySelector('.ph-name');
     const phLatin = document.querySelector('.ph-latin');
     const phIcon  = document.querySelector('.ph-icon');
@@ -39,9 +38,8 @@ function initPoint(cfg) {
     const placeholder = document.getElementById('placeholder');
   
     let progressSaved = false;
-    let stationDone   = false; // станция уже пройдена в этой сессии
+    let stationDone   = false;
   
-    // Если станция уже пройдена ранее — сразу показать штамп при сканировании
     const completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
     if (completed.includes(cfg.pointId)) stationDone = true;
   
@@ -56,13 +54,7 @@ function initPoint(cfg) {
         }
   
         if (ui) ui.classList.add('visible');
-  
-        // Если уже прошли — сразу штамп, иначе факт
-        if (stationDone) {
-          showPanel('stamp-panel');
-        } else {
-          showPanel('fact-panel');
-        }
+        showPanel(stationDone ? 'stamp-panel' : 'fact-panel');
   
         if (!progressSaved) {
           saveProgress(cfg.pointId, groupCode, userId);
@@ -72,14 +64,11 @@ function initPoint(cfg) {
   
       arTarget.addEventListener('targetLost', () => {
         if (video) video.pause();
-        if (!stationDone && hint) hint.classList.remove('hidden');
       });
     }
   
     // ── Quiz ──────────────────────────────────────────────────────────────
-    window.showQuiz = function() {
-      showPanel('quiz-panel');
-    };
+    window.showQuiz = function() { showPanel('quiz-panel'); };
   
     window.checkAnswer = function(btn, answerNum) {
       const resultMsg = document.getElementById('result-msg');
@@ -98,29 +87,19 @@ function initPoint(cfg) {
         buttons[cfg.correctAns - 1]?.classList.add('correct');
         if (resultMsg) resultMsg.innerHTML =
           `<p class="result wrong-msg">${cfg.wrongText}</p>`;
-        // После неправильного ответа — тоже показываем штамп через 2.5 сек
         setTimeout(() => showPanel('stamp-panel'), 2500);
       }
     };
   
-    // ── Переход после штампа ─────────────────────────────────────────────
+    // ── После штампа: переход на страницу-сканер ─────────────────────────
     window.goNext = function() {
       const done = JSON.parse(localStorage.getItem('quest_completed') || '[]');
-  
-      // Если все 7 пройдены — финал
       if (done.length >= 7) {
         window.location.href = '/final.html';
-        return;
+      } else {
+        // Переходим на универсальный сканер — он поймёт какой маркер перед камерой
+        window.location.href = '/scan.html';
       }
-  
-      // Иначе — скрыть UI, дать искать следующий маркер
-      if (ui) ui.classList.remove('visible');
-      showPanel('');
-      if (hint) {
-        hint.textContent = '📷 Найди следующую карточку с котиком 🐱';
-        hint.classList.remove('hidden');
-      }
-      if (placeholder) placeholder.classList.remove('hidden');
     };
   
     window.showPanel = showPanel;
@@ -131,21 +110,20 @@ function initPoint(cfg) {
   function showPanel(id) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     if (id) {
-      const target = document.getElementById(id);
-      if (target) target.classList.add('active');
+      const t = document.getElementById(id);
+      if (t) t.classList.add('active');
     }
   }
   
   function updateDots(currentId) {
-    const dotsEl   = document.getElementById('dots');
-    const doneEl   = document.getElementById('done-count');
-    const TOTAL    = 7;
+    const dotsEl    = document.getElementById('dots');
+    const doneEl    = document.getElementById('done-count');
     const completed = JSON.parse(localStorage.getItem('quest_completed') || '[]');
   
     if (doneEl) doneEl.textContent = completed.length;
   
     if (dotsEl) {
-      dotsEl.innerHTML = Array.from({ length: TOTAL }, (_, i) => {
+      dotsEl.innerHTML = Array.from({ length: 7 }, (_, i) => {
         const n   = i + 1;
         const cls = completed.includes(n) ? 'dot done'
                   : n === currentId       ? 'dot current'
@@ -164,7 +142,6 @@ function initPoint(cfg) {
       const doneEl = document.getElementById('done-count');
       if (doneEl) doneEl.textContent = completed.length;
     }
-  
     try {
       await fetch('/api/progress', {
         method: 'POST',

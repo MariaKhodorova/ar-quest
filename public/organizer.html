@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Организатор · AR Квест</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1a0f; --surface: #132016; --surface2: #1a2e1d;
+      --border: #1e3422; --green: #4ade80; --text: #e8f5eb; --muted: #7fa888;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh; background: var(--bg);
+      font-family: 'DM Sans', sans-serif; color: var(--text); padding: 24px;
+      background-image: radial-gradient(ellipse 50% 40% at 50% 0%, #1a3a1e44 0%, transparent 60%);
+    }
+    header { max-width: 680px; margin: 0 auto 32px; display: flex; align-items: baseline; gap: 16px; }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 26px; }
+    header span { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--green); opacity: 0.6; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 28px; max-width: 680px; margin: 0 auto 20px; }
+    .card h2 { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 20px; color: var(--green); }
+    button { background: var(--green); color: #0a1a0c; border: none; border-radius: 10px; padding: 14px 28px; font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: opacity 0.2s; }
+    button:hover { opacity: 0.88; }
+    button.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    button.outline-green { background: transparent; border: 1px solid var(--green); color: var(--green); padding: 10px 18px; font-size: 13px; }
+    #sessionBox { display: none; }
+    .code-display { font-family: monospace; font-size: 32px; letter-spacing: 6px; color: var(--green); background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px 24px; display: inline-block; margin: 12px 0; }
+    .qr-link { font-size: 13px; color: var(--muted); word-break: break-all; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+    .qr-link a { color: var(--green); text-decoration: none; }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+    #qrWrap { display: none; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); gap: 24px; flex-wrap: wrap; align-items: center; }
+    #qrCanvas { background: #fff; padding: 12px; border-radius: 12px; flex-shrink: 0; line-height: 0; }
+    .qr-meta { flex: 1; min-width: 180px; }
+    .qr-meta p { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+    #statsBox { display: none; }
+    .stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .participant { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .participant-name { font-weight: 500; }
+    .progress-pips { display: flex; gap: 6px; }
+    .pip { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .pip.done { background: var(--green); }
+    .empty-state { color: var(--muted); font-size: 14px; text-align: center; padding: 24px 0; }
+    @media print {
+      body { background: white; padding: 0; }
+      .card { border: none; box-shadow: none; }
+      #createCard, #statsBox, .btn-row, .qr-link { display: none !important; }
+      #sessionBox { display: block !important; }
+      #qrWrap { display: flex !important; }
+      .code-display { color: #000; border-color: #ccc; background: #f9f9f9; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Панель организатора</h1>
+    <span>AR Квест</span>
+  </header>
+
+  <div class="card" id="createCard">
+    <h2>Новая сессия</h2>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:20px;">
+      Создайте сессию — участники сканируют QR-код и присоединяются автоматически.
+    </p>
+    <button onclick="createSession()">🌿 Создать сессию</button>
+  </div>
+
+  <div class="card" id="sessionBox">
+    <h2>Активная сессия</h2>
+    <p style="color:var(--muted);font-size:13px;">Код группы для участников:</p>
+    <div class="code-display" id="codeDisplay">…</div>
+
+    <div class="qr-link">
+      Ссылка: <a id="joinLink" href="#" target="_blank">…</a>
+    </div>
+
+    <div class="btn-row">
+      <button onclick="loadStats()">📊 Обновить статистику</button>
+      <button class="secondary" onclick="copyLink()">Скопировать ссылку</button>
+    </div>
+
+    <div id="qrWrap">
+      <div id="qrCanvas"></div>
+      <div class="qr-meta">
+        <p>Распечатайте или покажите участникам. При сканировании код группы подставляется автоматически — нужно только ввести имя.</p>
+        <button class="outline-green" onclick="window.print()">🖨 Распечатать QR</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="statsBox">
+    <div class="stats-header">
+      <h2>Участники</h2>
+      <span style="color:var(--muted);font-size:13px;" id="statsCount"></span>
+    </div>
+    <div id="statsList"></div>
+  </div>
+
+  <script>
+    const TOTAL_STATIONS = 1;
+    let currentCode = null;
+    let pollInterval = null;
+
+    async function createSession() {
+      try {
+        const res = await fetch('/api/session', { method: 'POST' });
+        const data = await res.json();
+        currentCode = data.groupCode;
+
+        document.getElementById('codeDisplay').textContent = currentCode;
+        const link = location.origin + '/?g=' + currentCode;
+        const linkEl = document.getElementById('joinLink');
+        linkEl.href = link;
+        linkEl.textContent = link;
+
+        document.getElementById('sessionBox').style.display = 'block';
+        document.getElementById('statsBox').style.display = 'block';
+
+        // Generate QR
+        const canvas = document.getElementById('qrCanvas');
+        canvas.innerHTML = '';
+        new QRCode(canvas, {
+          text: link,
+          width: 180,
+          height: 180,
+          colorDark: '#0d1a0f',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        document.getElementById('qrWrap').style.display = 'flex';
+
+        loadStats();
+        clearInterval(pollInterval);
+        pollInterval = setInterval(loadStats, 10000);
+      } catch(e) {
+        alert('Ошибка создания сессии: ' + e.message);
+      }
+    }
+
+    async function loadStats() {
+      if (!currentCode) return;
+      try {
+        const res = await fetch('/api/stats/' + currentCode);
+        const data = await res.json();
+        renderStats(data.participants);
+      } catch { console.warn('Stats fetch failed'); }
+    }
+
+    function renderStats(participants) {
+      const list = document.getElementById('statsList');
+      const n = participants.length;
+      document.getElementById('statsCount').textContent =
+        n + ' участник' + (n === 1 ? '' : n < 5 ? 'а' : 'ов');
+
+      if (n === 0) {
+        list.innerHTML = '<div class="empty-state">Участников пока нет. Покажите QR-код!</div>';
+        return;
+      }
+      participants.sort((a, b) => b.stationsCompleted - a.stationsCompleted);
+      list.innerHTML = participants.map(p => {
+        const pips = Array.from({ length: TOTAL_STATIONS }, (_, i) =>
+          '<div class="pip ' + (p.progress.includes(i + 1) ? 'done' : '') + '"></div>'
+        ).join('');
+        return '<div class="participant"><span class="participant-name">' +
+          escapeHtml(p.name) + '</span><div class="progress-pips">' + pips + '</div></div>';
+      }).join('');
+    }
+
+    function copyLink() {
+      if (!currentCode) return;
+      navigator.clipboard.writeText(location.origin + '/?g=' + currentCode).then(() => {
+        const btn = event.target;
+        btn.textContent = '✓ Скопировано';
+        setTimeout(() => { btn.textContent = 'Скопировать ссылку'; }, 2000);
+      });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+  </script>
+</body>
+</html>

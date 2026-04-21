@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AR Квест · Вход</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d1a0f;
+      --surface: #132016;
+      --border: #1e3422;
+      --green: #4ade80;
+      --green-dim: #22c55e44;
+      --text: #e8f5eb;
+      --muted: #7fa888;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100dvh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      padding: 24px;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 20% 10%, #1a3a1e55 0%, transparent 60%),
+        radial-gradient(ellipse 40% 60% at 80% 90%, #0f2e1555 0%, transparent 60%);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 0 60px #4ade8011;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 32px;
+      opacity: 0.7;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 36px;
+      font-weight: 300;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    input:focus { border-color: var(--green); }
+
+    input::placeholder { color: #3a5c41; }
+
+    #groupCode { text-transform: uppercase; letter-spacing: 2px; font-weight: 500; }
+
+    button {
+      width: 100%;
+      background: var(--green);
+      color: #0a1a0c;
+      border: none;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    button:hover { opacity: 0.9; }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .error {
+      background: #3a0f0f;
+      border: 1px solid #7f1d1d;
+      color: #fca5a5;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .organizer-link {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .organizer-link a {
+      color: var(--green);
+      text-decoration: none;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">AR Квест</div>
+    <h1>Добро<br>пожаловать</h1>
+    <p class="subtitle">Введите код группы и ваше имя, чтобы начать</p>
+
+    <label for="groupCode">Код группы</label>
+    <input id="groupCode" type="text" placeholder="LEAF-4829" maxlength="10" autocomplete="off" />
+
+    <label for="name">Ваше имя</label>
+    <input id="name" type="text" placeholder="Имя участника" maxlength="30" />
+
+    <button id="btn" onclick="joinQuest()">Начать квест →</button>
+    <div class="error" id="error"></div>
+
+    <div class="organizer-link">
+      Вы организатор? <a href="/organizer.html">Создать сессию</a>
+    </div>
+  </div>
+
+  <script>
+    // Pre-fill groupCode from URL ?g=LEAF-4829
+    const params = new URLSearchParams(location.search);
+    if (params.get('g')) {
+      document.getElementById('groupCode').value = params.get('g').toUpperCase();
+      document.getElementById('name').focus();
+    }
+
+    async function joinQuest() {
+      const groupCode = document.getElementById('groupCode').value.trim().toUpperCase();
+      const name = document.getElementById('name').value.trim();
+      const errEl = document.getElementById('error');
+      const btn = document.getElementById('btn');
+
+      errEl.style.display = 'none';
+
+      if (!groupCode || !name) {
+        errEl.textContent = 'Заполните оба поля.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Подключаемся…';
+
+      try {
+        const res = await fetch('/api/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupCode, name })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errEl.textContent = data.error || 'Ошибка сервера.';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Начать квест →';
+          return;
+        }
+
+        // Save to localStorage
+        localStorage.setItem('quest_userId', data.userId);
+        localStorage.setItem('quest_groupCode', data.groupCode);
+        localStorage.setItem('quest_name', data.name);
+
+        window.location.href = '/station1.html';
+      } catch {
+        errEl.textContent = 'Нет соединения с сервером.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Начать квест →';
+      }
+    }
+
+    document.getElementById('groupCode').addEventListener('input', e => {
+      e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') joinQuest();
+    });
+  </script>
+</body>
+</html>

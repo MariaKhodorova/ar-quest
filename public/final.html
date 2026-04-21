@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Финиш · AR Квест</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100dvh;
+      background: #0d1a0f;
+      font-family: 'Nunito', sans-serif;
+      color: #e8f5eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      text-align: center;
+      background-image:
+        radial-gradient(ellipse 60% 40% at 50% 0%, #1a3a1e55 0%, transparent 60%);
+    }
+
+    .trophy { font-size: 72px; margin-bottom: 16px; animation: pop 0.5s ease; }
+
+    @keyframes pop {
+      0%  { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    h1 { font-size: 30px; font-weight: 900; margin-bottom: 8px; }
+
+    .subtitle {
+      font-size: 15px;
+      color: #7fa888;
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .stamps {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .stamp {
+      font-size: 32px;
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 14px;
+      padding: 12px;
+      animation: pop 0.4s ease both;
+    }
+
+    .stamp:nth-child(1) { animation-delay: .1s; }
+    .stamp:nth-child(2) { animation-delay: .2s; }
+    .stamp:nth-child(3) { animation-delay: .3s; }
+    .stamp:nth-child(4) { animation-delay: .4s; }
+    .stamp:nth-child(5) { animation-delay: .5s; }
+    .stamp:nth-child(6) { animation-delay: .6s; }
+    .stamp:nth-child(7) { animation-delay: .7s; }
+
+    .name-badge {
+      font-size: 18px;
+      font-weight: 800;
+      color: #4ade80;
+      background: rgba(74,222,128,0.1);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 12px;
+      padding: 12px 24px;
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="trophy">🏆</div>
+  <h1>Квест пройден!</h1>
+  <p class="subtitle">Ты узнал секреты всех 7 растений.<br>Отличная работа!</p>
+
+  <div class="name-badge" id="nameBadge"></div>
+
+  <div class="stamps">
+    <div class="stamp">🌴</div>
+    <div class="stamp">🌵</div>
+    <div class="stamp">🌵</div>
+    <div class="stamp">🌿</div>
+    <div class="stamp">🌸</div>
+    <div class="stamp">🦕</div>
+    <div class="stamp">🌱</div>
+  </div>
+
+  <script>
+    const name = localStorage.getItem('quest_name') || 'Участник';
+    document.getElementById('nameBadge').textContent = name + ', молодец! 🎉';
+  </script>
+</body>
+</html>

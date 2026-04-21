@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<script>
+(async function() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch(e) { console.warn("Camera pre-request failed:", e); }
+})();
+</script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Станция 5 · Камелия японская</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+
+<div id="hud">
+  <div id="progress-badge">⭐ <span id="done-count">0</span> / 7</div>
+  <div id="point-badge">Станция 5 · Камелия японская</div>
+  <div id="hudName"></div>
+</div>
+
+<div id="hint">📷 Найди карточку с котиком и наведи камеру</div>
+
+<div id="placeholder">
+  <div class="ph-icon">🌸</div>
+  <div class="ph-name">Камелия японская</div>
+  <div class="ph-latin">Camellia japonica</div>
+</div>
+
+<div id="ui">
+  <div id="fact-panel" class="panel">
+    <div class="panel-title">Интересный факт</div>
+    <h2>Цветок самураев 🍵</h2>
+    <p>Камелия — символ самураев и один из любимых цветков Японии. А ещё у камелии есть родственник — чайный куст (Camellia sinensis). Именно из его листьев делают весь чай, который мы пьём!</p>
+    <button class="btn btn-primary" onclick="showQuiz()">Ответить на вопрос ➡️</button>
+  </div>
+
+  <div id="quiz-panel" class="panel">
+    <div class="panel-title">Вопрос</div>
+    <h2>Какое растение является близким родственником камелии японской?</h2>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 1)">🍵 Чайный куст, из листьев которого делают чай</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 2)">☕ Кофейное дерево</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 3)">🍫 Шоколадное дерево (какао)</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 4)">🌼 Ромашка аптечная</button>
+    <div id="result-msg"></div>
+  </div>
+
+  <div id="stamp-panel" class="panel">
+    <div class="dots" id="dots"></div>
+    <div class="stamp-wrap">
+      <span class="stamp-circle">🌸</span>
+      <h2>Штамп получен!</h2>
+      <p>Тайна чашки чая раскрыта! Ищи следующую карточку с котиком 🐱</p>
+    </div>
+    <button class="btn btn-primary mt16" onclick="goNext()">Дальше ➡️</button>
+  </div>
+</div>
+
+<a-scene
+  mindar-image="imageTargetSrc: /targets/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  renderer="colorManagement: true;"
+>
+  <a-assets>
+    <video id="plant-video"
+      src="https://res.cloudinary.com/dwd9mf3bb/video/upload/v1776797651/plant5_hrr9hb.mp4"
+      playsinline webkit-playsinline muted loop autoplay
+      preload="auto" crossorigin="anonymous">
+    </video>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity mindar-image-target="targetIndex: 4" id="ar-target">
+    <a-video src="#plant-video" width="1" height="0.5625" position="0 0 0.001"></a-video>
+  </a-entity>
+</a-scene>
+
+<script src="/quest.js"></script>
+<script>
+  initPoint({
+    pointId:     5,
+    targetIndex: 4,
+    correctAns:  1,
+    nextUrl:     '/station6.html',
+    plantName:   'Камелия японская',
+    plantLatin:  'Camellia japonica',
+    plantEmoji:  '🌸',
+    hasVideo:    true,
+    correctText: '✅ Правильно! Чайный куст — это тоже камелия (Camellia sinensis). Весь чай в мире делается из листьев родственницы этого красивого цветка!',
+    wrongText:   '❌ Не совсем. Близкий родственник камелии — чайный куст! Из его листьев делают весь чай.',
+  });
+</script>
+</body>
+</html>

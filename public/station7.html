@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<script>
+(async function() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch(e) { console.warn("Camera pre-request failed:", e); }
+})();
+</script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Станция 7 · Монстера лакомая</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+
+<div id="hud">
+  <div id="progress-badge">⭐ <span id="done-count">0</span> / 7</div>
+  <div id="point-badge">Станция 7 · Монстера лакомая</div>
+  <div id="hudName"></div>
+</div>
+
+<div id="hint">📷 Найди карточку с котиком и наведи камеру</div>
+
+<div id="placeholder">
+  <div class="ph-icon">🌱</div>
+  <div class="ph-name">Монстера лакомая</div>
+  <div class="ph-latin">Monstera deliciosa</div>
+</div>
+
+<div id="ui">
+  <div id="fact-panel" class="panel">
+    <div class="panel-title">Интересный факт</div>
+    <h2>Суперспособность листьев 🕳️</h2>
+    <p>Дырки в листьях монстеры — не болезнь, а суперспособность! Во время сильного ливня вода стекает сквозь отверстия, и огромный лист не рвётся. А ещё дырки пропускают солнечный свет к нижним листьям в тёмном лесу. Плоды монстеры съедобны и пахнут ананасом!</p>
+    <button class="btn btn-primary" onclick="showQuiz()">Ответить на вопрос ➡️</button>
+  </div>
+
+  <div id="quiz-panel" class="panel">
+    <div class="panel-title">Вопрос</div>
+    <h2>Зачем монстере дырки в листьях?</h2>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 1)">🌧️ Чтобы вода и свет проходили сквозь лист</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 2)">👻 Чтобы напугать животных</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 3)">🤒 Потому что листья болеют</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 4)">💨 Чтобы через них дышать</button>
+    <div id="result-msg"></div>
+  </div>
+
+  <div id="stamp-panel" class="panel">
+    <div class="dots" id="dots"></div>
+    <div class="stamp-wrap">
+      <span class="stamp-circle">🌱</span>
+      <h2>Штамп получен!</h2>
+      <p>Ты прошёл все 7 станций! Иди к финишу! 🏆</p>
+    </div>
+    <button class="btn btn-primary mt16" onclick="goNext()">Дальше ➡️</button>
+  </div>
+</div>
+
+<a-scene
+  mindar-image="imageTargetSrc: /targets/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  renderer="colorManagement: true;"
+>
+  <a-assets>
+    <video id="plant-video"
+      src="https://res.cloudinary.com/dwd9mf3bb/video/upload/v1776797684/plant7_isjbve.mp4"
+      playsinline webkit-playsinline muted loop autoplay
+      preload="auto" crossorigin="anonymous">
+    </video>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity mindar-image-target="targetIndex: 6" id="ar-target">
+    <a-video src="#plant-video" width="1" height="0.5625" position="0 0 0.001"></a-video>
+  </a-entity>
+</a-scene>
+
+<script src="/quest.js"></script>
+<script>
+  initPoint({
+    pointId:     7,
+    targetIndex: 6,
+    correctAns:  1,
+    nextUrl:     '/final.html',
+    plantName:   'Монстера лакомая',
+    plantLatin:  'Monstera deliciosa',
+    plantEmoji:  '🌱',
+    hasVideo:    true,
+    correctText: '✅ Отлично! Дырки — это защита: вода стекает сквозь них во время ливня, а свет проникает к нижним листьям в тёмном лесу.',
+    wrongText:   '❌ Не совсем. Дырки в листьях нужны, чтобы вода сквозь них стекала при ливне, и чтобы пропускать свет к нижним листьям.',
+  });
+</script>
+</body>
+</html>

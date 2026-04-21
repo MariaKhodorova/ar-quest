@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<script>
+(async function() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch(e) { console.warn("Camera pre-request failed:", e); }
+})();
+</script>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Станция 6 · Гинкго двухлопастное</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+
+<div id="hud">
+  <div id="progress-badge">⭐ <span id="done-count">0</span> / 7</div>
+  <div id="point-badge">Станция 6 · Гинкго двухлопастное</div>
+  <div id="hudName"></div>
+</div>
+
+<div id="hint">📷 Найди карточку с котиком и наведи камеру</div>
+
+<div id="placeholder">
+  <div class="ph-icon">🦕</div>
+  <div class="ph-name">Гинкго двухлопастное</div>
+  <div class="ph-latin">Ginkgo biloba</div>
+</div>
+
+<div id="ui">
+  <div id="fact-panel" class="panel">
+    <div class="panel-title">Интересный факт</div>
+    <h2>Живое ископаемое 🦕</h2>
+    <p>Гинкго — живое ископаемое! Эти деревья росли на Земле ещё 250 миллионов лет назад, во времена динозавров. Одно дерево может жить до 3000 лет. Листья гинкго по форме напоминают утиную лапку!</p>
+    <button class="btn btn-primary" onclick="showQuiz()">Ответить на вопрос ➡️</button>
+  </div>
+
+  <div id="quiz-panel" class="panel">
+    <div class="panel-title">Вопрос</div>
+    <h2>Что ещё, кроме гинкго, жило на Земле во времена динозавров?</h2>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 1)">🌿 Хвощи и папоротники</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 2)">🍎 Яблони и груши</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 3)">🥥 Пальмы с кокосами</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 4)">🌲 Берёзы и ели</button>
+    <div id="result-msg"></div>
+  </div>
+
+  <div id="stamp-panel" class="panel">
+    <div class="dots" id="dots"></div>
+    <div class="stamp-wrap">
+      <span class="stamp-circle">🦕</span>
+      <h2>Штамп получен!</h2>
+      <p>250 миллионов лет истории — в кармане! Ищи последнюю карточку 🐱</p>
+    </div>
+    <button class="btn btn-primary mt16" onclick="goNext()">Дальше ➡️</button>
+  </div>
+</div>
+
+<a-scene
+  mindar-image="imageTargetSrc: /targets/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  renderer="colorManagement: true;"
+>
+  <a-assets>
+    <video id="plant-video"
+      src="https://res.cloudinary.com/dwd9mf3bb/video/upload/v1776797664/plant6_tptwk6.mp4"
+      playsinline webkit-playsinline muted loop autoplay
+      preload="auto" crossorigin="anonymous">
+    </video>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity mindar-image-target="targetIndex: 5" id="ar-target">
+    <a-video src="#plant-video" width="1" height="0.5625" position="0 0 0.001"></a-video>
+  </a-entity>
+</a-scene>
+
+<script src="/quest.js"></script>
+<script>
+  initPoint({
+    pointId:     6,
+    targetIndex: 5,
+    correctAns:  1,
+    nextUrl:     '/station7.html',
+    plantName:   'Гинкго двухлопастное',
+    plantLatin:  'Ginkgo biloba',
+    plantEmoji:  '🦕',
+    hasVideo:    true,
+    correctText: '✅ Верно! Хвощи и папоротники — тоже древние растения, они жили рядом с динозаврами. Некоторые из них можно встретить и сегодня!',
+    wrongText:   '❌ Не угадал. Яблони, пальмы и берёзы появились намного позже. А вот хвощи и папоротники — ровесники динозавров!',
+  });
+</script>
+</body>
+</html>

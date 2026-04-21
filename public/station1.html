@@ -1,225 +1,98 @@
 <!DOCTYPE html>
 <html lang="ru">
+<script>
+(async function() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch(e) { console.warn("Camera pre-request failed:", e); }
+})();
+</script>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Станция 1 · Бокарнея</title>
-
-  <!-- A-Frame must load BEFORE MindAR -->
+  <title>Станция 1 · Бокарнея отогнутая</title>
+  <link rel="stylesheet" href="/style.css">
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body { overflow: hidden; background: #000; font-family: 'DM Sans', sans-serif; }
-
-    /* ── Auth guard overlay ─────────────────────────────────────────────── */
-    #authGuard {
-      position: fixed; inset: 0; z-index: 9999;
-      background: #0d1a0f;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 16px; padding: 32px;
-      color: #e8f5eb;
-    }
-
-    #authGuard p { font-size: 15px; opacity: 0.7; text-align: center; }
-    #authGuard a {
-      color: #4ade80; text-decoration: none;
-      border: 1px solid #4ade8055;
-      padding: 12px 28px; border-radius: 10px;
-      font-size: 14px;
-    }
-
-    /* ── HUD overlay ────────────────────────────────────────────────────── */
-    #hud {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px;
-      background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
-      pointer-events: none;
-    }
-
-    .hud-badge {
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.85);
-      backdrop-filter: blur(6px);
-      letter-spacing: 0.5px;
-    }
-
-    .hud-station {
-      background: rgba(74,222,128,0.18);
-      border-color: rgba(74,222,128,0.35);
-      color: #4ade80;
-      font-weight: 600;
-    }
-
-    /* ── Scan hint ──────────────────────────────────────────────────────── */
-    #scanHint {
-      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      z-index: 100;
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 14px;
-      padding: 14px 24px;
-      color: rgba(255,255,255,0.9);
-      font-size: 14px;
-      text-align: center;
-      backdrop-filter: blur(8px);
-      transition: opacity 0.4s;
-      max-width: 280px;
-    }
-
-    #scanHint.hidden { opacity: 0; pointer-events: none; }
-
-    /* ── Completion toast ───────────────────────────────────────────────── */
-    #toast {
-      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      z-index: 200;
-      background: rgba(15, 40, 20, 0.92);
-      border: 1px solid #4ade8066;
-      border-radius: 16px;
-      padding: 16px 28px;
-      color: #e8f5eb;
-      font-size: 14px;
-      text-align: center;
-      backdrop-filter: blur(10px);
-      display: none;
-      max-width: 300px;
-      box-shadow: 0 0 40px #4ade8022;
-    }
-
-    #toast .icon { font-size: 24px; margin-bottom: 6px; }
-    #toast strong { display: block; font-size: 16px; color: #4ade80; margin-bottom: 4px; }
-  </style>
 </head>
 <body>
 
-  <!-- Auth guard (shown if not logged in) -->
-  <div id="authGuard" style="display:none;">
-    <p>Чтобы начать квест, сначала войдите в группу.</p>
-    <a href="/">← Войти</a>
+<div id="hud">
+  <div id="progress-badge">⭐ <span id="done-count">0</span> / 7</div>
+  <div id="point-badge">Станция 1 · Бокарнея отогнутая</div>
+  <div id="hudName"></div>
+</div>
+
+<div id="hint">📷 Найди карточку с котиком и наведи камеру</div>
+
+<div id="placeholder">
+  <div class="ph-icon">🌴</div>
+  <div class="ph-name">Бокарнея отогнутая</div>
+  <div class="ph-latin">Beaucarnea recurvata</div>
+</div>
+
+<div id="ui">
+  <div id="fact-panel" class="panel">
+    <div class="panel-title">Интересный факт</div>
+    <h2>Дерево-бутылка 💧</h2>
+    <p>Бокарнея, или нолина, хранит воду прямо в стволе — он раздувается как бутылка! Это помогает растению пережить долгую засуху. В Мексике бокарнею называют «конским хвостом» за пучок длинных листьев наверху.</p>
+    <button class="btn btn-primary" onclick="showQuiz()">Ответить на вопрос ➡️</button>
   </div>
 
-  <!-- HUD -->
-  <div id="hud">
-    <div class="hud-badge hud-station">Станция 1</div>
-    <div class="hud-badge" id="hudName">…</div>
+  <div id="quiz-panel" class="panel">
+    <div class="panel-title">Вопрос</div>
+    <h2>Где бокарнея хранит запасы воды?</h2>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 1)">💧 В раздутом стволе-«бутылке»</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 2)">🍃 В длинных листьях</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 3)">🌱 В корнях под землёй</button>
+    <button class="btn btn-answer" onclick="checkAnswer(this, 4)">☁️ Поглощает из воздуха</button>
+    <div id="result-msg"></div>
   </div>
 
-  <!-- Scan prompt -->
-  <div id="scanHint">📷 Наведите камеру на растение</div>
-
-  <!-- Completion toast -->
-  <div id="toast">
-    <div class="icon">🌿</div>
-    <strong>Станция пройдена!</strong>
-    Прогресс сохранён
+  <div id="stamp-panel" class="panel">
+    <div class="dots" id="dots"></div>
+    <div class="stamp-wrap">
+      <span class="stamp-circle">🌴</span>
+      <h2>Штамп получен!</h2>
+      <p>Секрет выживания раскрыт! Ищи следующую карточку с котиком 🐱</p>
+    </div>
+    <button class="btn btn-primary mt16" onclick="goNext()">Дальше ➡️</button>
   </div>
+</div>
 
-  <!-- AR Scene -->
-  <a-scene
-    mindar-image="imageTargetSrc: /targets/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    renderer="colorManagement: true;"
-  >
-    <a-assets>
-      <video id="plant-video"
-        src="https://res.cloudinary.com/dwd9mf3bb/video/upload/v1776769094/Plant1_hkkvum.mp4"
-        playsinline
-        webkit-playsinline
-        muted
-        loop
-        preload="auto"
-        crossorigin="anonymous">
-      </video>
-    </a-assets>
+<a-scene
+  mindar-image="imageTargetSrc: /targets/targets.mind; autoStart: true; uiLoading: yes; uiScanning: yes;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  renderer="colorManagement: true;"
+>
+  <a-assets>
+    <video id="plant-video"
+      src="https://res.cloudinary.com/dwd9mf3bb/video/upload/v1776798091/plant1_ysozdr.mp4"
+      playsinline webkit-playsinline muted loop autoplay
+      preload="auto" crossorigin="anonymous">
+    </video>
+  </a-assets>
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+  <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
+    <a-video src="#plant-video" width="1" height="0.5625" position="0 0 0.001"></a-video>
+  </a-entity>
+</a-scene>
 
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-    <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
-      <!-- Video plane: 16:9 = width 1, height 0.5625 -->
-      <a-video
-        src="#plant-video"
-        width="1"
-        height="0.5625"
-        position="0 0 0.001"
-        rotation="0 0 0">
-      </a-video>
-    </a-entity>
-  </a-scene>
-
-  <script>
-    // ── Auth check ────────────────────────────────────────────────────────
-    const userId    = localStorage.getItem('quest_userId');
-    const groupCode = localStorage.getItem('quest_groupCode');
-    const userName  = localStorage.getItem('quest_name');
-
-    if (!userId || !groupCode) {
-      document.getElementById('authGuard').style.display = 'flex';
-    } else {
-      document.getElementById('hudName').textContent = userName || 'Участник';
-    }
-
-    // ── AR logic ──────────────────────────────────────────────────────────
-    const arTarget = document.querySelector('#ar-target');
-    const video    = document.querySelector('#plant-video');
-    const scanHint = document.getElementById('scanHint');
-    const toast    = document.getElementById('toast');
-
-    let progressSaved = false;
-
-    arTarget.addEventListener('targetFound', () => {
-      scanHint.classList.add('hidden');
-
-      // Reset & play video
-      video.currentTime = 0;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay blocked — mute and retry (already muted, but just in case)
-          video.muted = true;
-          video.play().catch(console.warn);
-        });
-      }
-
-      // Save progress once per session
-      if (!progressSaved && userId && groupCode) {
-        saveProgress();
-      }
-    });
-
-    arTarget.addEventListener('targetLost', () => {
-      video.pause();
-      scanHint.classList.remove('hidden');
-    });
-
-    async function saveProgress() {
-      try {
-        const res = await fetch('/api/progress', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ groupCode, userId, stationId: 1 })
-        });
-        if (res.ok) {
-          progressSaved = true;
-          showToast();
-        }
-      } catch (e) {
-        console.warn('Progress save failed:', e);
-      }
-    }
-
-    function showToast() {
-      toast.style.display = 'block';
-      setTimeout(() => { toast.style.display = 'none'; }, 3500);
-    }
-  </script>
+<script src="/quest.js"></script>
+<script>
+  initPoint({
+    pointId:     1,
+    targetIndex: 0,
+    correctAns:  1,
+    nextUrl:     '/station2.html',
+    plantName:   'Бокарнея отогнутая',
+    plantLatin:  'Beaucarnea recurvata',
+    plantEmoji:  '🌴',
+    hasVideo:    true,
+    correctText: '✅ Верно! Ствол бокарнеи — настоящий резервуар. Чем дольше засуха, тем больше воды он запасает!',
+    wrongText:   '❌ Не угадал! Бокарнея хранит воду в раздутом стволе — именно поэтому он такой пузатый.',
+  });
+</script>
 </body>
 </html>
